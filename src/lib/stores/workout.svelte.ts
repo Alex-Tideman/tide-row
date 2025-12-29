@@ -1,3 +1,5 @@
+import { defaultScenery } from '$lib/scenery';
+
 export interface WorkoutState {
 	isActive: boolean;
 	elapsedTime: number;
@@ -5,6 +7,7 @@ export interface WorkoutState {
 	intervalCountdown: number;
 	intervalsCompleted: number;
 	pace: number;
+	scenery: string;
 }
 
 interface PersistedState {
@@ -14,6 +17,7 @@ interface PersistedState {
 	intervalCountdown: number;
 	intervalsCompleted: number;
 	pace: number;
+	scenery: string;
 	lastTick: number;
 }
 
@@ -57,6 +61,7 @@ function createWorkoutStore() {
 	let intervalCountdown = $state(0);
 	let intervalsCompleted = $state(0);
 	let pace = $state(24);
+	let scenery = $state(defaultScenery);
 	let timerInterval: ReturnType<typeof setInterval> | null = null;
 
 	function persist() {
@@ -67,6 +72,7 @@ function createWorkoutStore() {
 			intervalCountdown,
 			intervalsCompleted,
 			pace,
+			scenery,
 			lastTick: Date.now()
 		});
 	}
@@ -98,6 +104,7 @@ function createWorkoutStore() {
 			isActive = true;
 			interval = saved.interval;
 			pace = saved.pace;
+			scenery = saved.scenery || defaultScenery;
 			elapsedTime = saved.elapsedTime + secondsPassed;
 			intervalsCompleted = saved.intervalsCompleted || 0;
 
@@ -151,6 +158,11 @@ function createWorkoutStore() {
 		}
 	}
 
+	function updateScenery(newScenery: string) {
+		scenery = newScenery;
+		persist();
+	}
+
 	return {
 		get isActive() {
 			return isActive;
@@ -170,11 +182,15 @@ function createWorkoutStore() {
 		get pace() {
 			return pace;
 		},
+		get scenery() {
+			return scenery;
+		},
 		start,
 		end,
 		restore,
 		updatePace,
-		updateInterval
+		updateInterval,
+		updateScenery
 	};
 }
 

@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import Setup from '$lib/components/Setup.svelte';
-	import VideoPlayer from '$lib/components/VideoPlayer.svelte';
+	import RowingScene from '$lib/components/RowingScene.svelte';
 	import WorkoutDisplay from '$lib/components/WorkoutDisplay.svelte';
 	import { workout } from '$lib/stores/workout.svelte';
 	import { startListening, stopListening, getVoiceState } from '$lib/voice.svelte';
@@ -39,13 +39,14 @@
 
 {#if workout.isActive}
 	<div class="relative h-screen w-screen overflow-hidden">
-		<VideoPlayer pace={workout.pace} />
+		<RowingScene pace={workout.pace} sceneryId={workout.scenery} />
 		<WorkoutDisplay
 			elapsedTime={workout.elapsedTime}
 			interval={workout.interval}
 			intervalCountdown={workout.intervalCountdown}
 			intervalsCompleted={workout.intervalsCompleted}
 			pace={workout.pace}
+			sceneryId={workout.scenery}
 			isListening={voiceState.isListening}
 		/>
 

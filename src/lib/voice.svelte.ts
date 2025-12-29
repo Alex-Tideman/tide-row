@@ -1,4 +1,5 @@
 import { workout } from './stores/workout.svelte';
+import { findSceneryByVoice } from './scenery';
 
 type SpeechRecognitionType = typeof window.SpeechRecognition;
 
@@ -11,7 +12,7 @@ let recognition: InstanceType<SpeechRecognitionType> | null = null;
 let isListening = $state(false);
 let lastCommand = $state('');
 
-function parseCommand(transcript: string): { type: string; value?: number } | null {
+function parseCommand(transcript: string): { type: string; value?: number; scenery?: string } | null {
 	const text = transcript.toLowerCase().trim();
 
 	// End commands
@@ -29,6 +30,14 @@ function parseCommand(transcript: string): { type: string; value?: number } | nu
 	const intervalMatch = text.match(/(?:set\s+)?(?:change\s+)?interval(?:\s+to)?\s+(\d+)/);
 	if (intervalMatch) {
 		return { type: 'interval', value: parseInt(intervalMatch[1], 10) };
+	}
+
+	// Scenery commands: "row in mountain lake", "switch to tropical ocean", "change to sunset"
+	if (text.includes('row in') || text.includes('switch to') || text.includes('change to') || text.includes('go to')) {
+		const sceneryId = findSceneryByVoice(text);
+		if (sceneryId) {
+			return { type: 'scenery', scenery: sceneryId };
+		}
 	}
 
 	return null;
@@ -73,6 +82,11 @@ export function startListening(callbacks: VoiceCallbacks) {
 					case 'interval':
 						if (command.value) {
 							workout.updateInterval(command.value);
+						}
+						break;
+					case 'scenery':
+						if (command.scenery) {
+							workout.updateScenery(command.scenery);
 						}
 						break;
 				}

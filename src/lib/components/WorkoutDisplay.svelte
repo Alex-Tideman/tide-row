@@ -1,10 +1,13 @@
 <script lang="ts">
+	import { sceneries } from '$lib/scenery';
+
 	interface Props {
 		elapsedTime: number;
 		interval: number;
 		intervalCountdown: number;
 		intervalsCompleted: number;
 		pace: number;
+		sceneryId: string;
 		isListening?: boolean;
 	}
 
@@ -14,8 +17,11 @@
 		intervalCountdown,
 		intervalsCompleted,
 		pace,
+		sceneryId,
 		isListening = false
 	}: Props = $props();
+
+	const sceneryList = Object.values(sceneries);
 
 	function formatTime(seconds: number): string {
 		const mins = Math.floor(seconds / 60);
@@ -78,13 +84,15 @@
 	</div>
 </div>
 
-<div class="absolute top-4 right-4 rounded-xl bg-black/60 p-6 text-white backdrop-blur-sm">
-	<div class="flex flex-col gap-4 text-right">
+<div class="absolute top-4 right-4 flex flex-col gap-4">
+	<div
+		class="flex flex-col items-end gap-4 rounded-xl bg-black/60 p-6 text-right text-white backdrop-blur-sm"
+	>
 		<div class="leading-12 md:leading-24">
 			{#if isListening}
 				<div class="flex items-center gap-2 text-sm text-green-400">
-					Voice active
-					<span class="h-2 w-2 animate-pulse rounded-full bg-green-400"></span>
+					<p>Voice active</p>
+					<p class="h-2 w-2 animate-pulse rounded-full bg-green-400"></p>
 				</div>
 			{/if}
 			<p class="text-6xl font-bold md:text-8xl">
@@ -92,5 +100,16 @@
 			</p>
 			<p class="text-2xl text-slate-300">SPM</p>
 		</div>
+	</div>
+	<div class="flex flex-col gap-2 rounded-xl bg-black/60 p-6 text-white backdrop-blur-sm">
+		{#each sceneryList as scenery}
+			<div
+				class="rounded-lg px-3 py-2 text-xs transition-all {scenery.id === sceneryId
+					? 'bg-green-600/80 font-semibold text-white'
+					: 'text-slate-200'}"
+			>
+				{scenery.name}
+			</div>
+		{/each}
 	</div>
 </div>
