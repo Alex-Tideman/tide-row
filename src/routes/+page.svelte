@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
 	import Setup from '$lib/components/Setup.svelte';
 	import VideoPlayer from '$lib/components/VideoPlayer.svelte';
 	import WorkoutDisplay from '$lib/components/WorkoutDisplay.svelte';
@@ -7,8 +8,7 @@
 
 	const voiceState = getVoiceState();
 
-	function handleStart(interval: number, pace: number) {
-		workout.start(interval, pace);
+	function startVoiceListening() {
 		startListening({
 			onEnd: () => {
 				workout.end();
@@ -17,6 +17,18 @@
 				console.log('Voice command:', command);
 			}
 		});
+	}
+
+	onMount(() => {
+		workout.restore();
+		if (workout.isActive) {
+			startVoiceListening();
+		}
+	});
+
+	function handleStart(interval: number, pace: number) {
+		workout.start(interval, pace);
+		startVoiceListening();
 	}
 
 	function handleEnd() {
@@ -32,6 +44,7 @@
 			elapsedTime={workout.elapsedTime}
 			interval={workout.interval}
 			intervalCountdown={workout.intervalCountdown}
+			intervalsCompleted={workout.intervalsCompleted}
 			pace={workout.pace}
 			isListening={voiceState.isListening}
 		/>

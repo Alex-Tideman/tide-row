@@ -3,48 +3,93 @@
 		elapsedTime: number;
 		interval: number;
 		intervalCountdown: number;
+		intervalsCompleted: number;
 		pace: number;
 		isListening?: boolean;
 	}
 
-	let { elapsedTime, interval, intervalCountdown, pace, isListening = false }: Props = $props();
+	let {
+		elapsedTime,
+		interval,
+		intervalCountdown,
+		intervalsCompleted,
+		pace,
+		isListening = false
+	}: Props = $props();
 
 	function formatTime(seconds: number): string {
 		const mins = Math.floor(seconds / 60);
 		const secs = seconds % 60;
 		return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
 	}
+
+	// Circle progress calculations
+	const radius = 80;
+	const circumference = 2 * Math.PI * radius;
+
+	let progress = $derived(() => {
+		const totalSeconds = interval * 60;
+		const elapsedInInterval = totalSeconds - intervalCountdown;
+		return elapsedInInterval / totalSeconds;
+	});
+
+	let strokeDashoffset = $derived(circumference * (1 - progress()));
 </script>
 
 <div class="absolute top-4 left-4 rounded-xl bg-black/60 p-6 text-white backdrop-blur-sm">
 	<div class="flex flex-col gap-3">
-		<div class="font-mono text-8xl font-bold tracking-tight">
-			{formatTime(intervalCountdown)}
+		<div class="tracking-tightest font-mono text-2xl font-bold md:text-4xl lg:text-7xl">
+			{formatTime(intervalCountdown)} / {formatTime(interval * 60)}
 		</div>
+	</div>
+</div>
 
-		<div class="flex items-center gap-2">
-			<span class="text-xl text-slate-400">Total:</span>
-			<span class="font-mono text-3xl font-semibold text-white">{formatTime(elapsedTime)}</span>
-		</div>
-
-		{#if isListening}
-			<div class="flex items-center gap-2 text-sm text-green-400">
-				<span class="h-2 w-2 animate-pulse rounded-full bg-green-400"></span>
-				Voice active
+<div class="absolute bottom-4 left-4 rounded-xl bg-black/60 p-6 text-white backdrop-blur-sm">
+	<div class="flex flex-wrap items-center gap-8 text-left">
+		<div>
+			<div class="leading-12">
+				<p class="text-lg text-slate-400">Total</p>
+				<p class="font-mono text-3xl font-semibold text-white">{formatTime(elapsedTime)}</p>
 			</div>
-		{/if}
+
+			<div class="leading-12">
+				<p class="text-lg text-slate-400">Intervals</p>
+				<p class="font-mono text-3xl font-semibold text-white">{intervalsCompleted}</p>
+			</div>
+		</div>
+		<div class="flex flex-col items-center gap-2">
+			<svg width="200" height="200" class="-rotate-90">
+				<circle cx="100" cy="100" r={radius} fill="none" stroke="#374151" stroke-width="24" />
+				<circle
+					cx="100"
+					cy="100"
+					r={radius}
+					fill="none"
+					stroke="#22c55e"
+					stroke-width="24"
+					stroke-linecap="round"
+					stroke-dasharray={circumference}
+					stroke-dashoffset={strokeDashoffset}
+					class="transition-all duration-1000 ease-linear"
+				/>
+			</svg>
+		</div>
 	</div>
 </div>
 
 <div class="absolute top-4 right-4 rounded-xl bg-black/60 p-6 text-white backdrop-blur-sm">
 	<div class="flex flex-col gap-4 text-right">
-		<div>
-			<span class="text-lg text-slate-400">Interval</span>
-			<div class="text-4xl font-semibold">{interval} min</div>
-		</div>
-		<div>
-			<span class="text-lg text-slate-400">Pace</span>
-			<div class="text-7xl font-bold"><span class="text-3xl text-slate-300">SPM</span> {pace}</div>
+		<div class="leading-12 md:leading-24">
+			{#if isListening}
+				<div class="flex items-center gap-2 text-sm text-green-400">
+					Voice active
+					<span class="h-2 w-2 animate-pulse rounded-full bg-green-400"></span>
+				</div>
+			{/if}
+			<p class="text-6xl font-bold md:text-8xl">
+				{pace}
+			</p>
+			<p class="text-2xl text-slate-300">SPM</p>
 		</div>
 	</div>
 </div>

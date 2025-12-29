@@ -20,9 +20,8 @@ function parseCommand(transcript: string): { type: string; value?: number } | nu
 	}
 
 	// Pace commands: "set pace to 28", "pace 30", "change pace to 25"
-	const paceMatch = text.match(/(?:set\s+)?pace(?:\s+to)?\s+(\d+)/);
+	const paceMatch = text.match(/(?:set\s+)?(?:change\s+)?pace(?:\s+to)?\s+(\d+)/);
 	if (paceMatch) {
-		debugger;
 		return { type: 'pace', value: parseInt(paceMatch[1], 10) };
 	}
 
