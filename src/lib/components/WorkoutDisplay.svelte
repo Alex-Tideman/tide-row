@@ -24,7 +24,7 @@
 	}
 
 	// Circle progress calculations
-	const radius = 80;
+	const radius = 120;
 	const circumference = 2 * Math.PI * radius;
 
 	let progress = $derived(() => {
@@ -36,10 +36,28 @@
 	let strokeDashoffset = $derived(circumference * (1 - progress()));
 </script>
 
-<div class="absolute top-4 left-4 rounded-xl bg-black/60 p-6 text-white backdrop-blur-sm">
-	<div class="flex flex-col gap-3">
-		<div class="tracking-tightest font-mono text-2xl font-bold md:text-4xl lg:text-7xl">
-			{formatTime(intervalCountdown)} / {formatTime(interval * 60)}
+<div
+	class="absolute top-4 left-4 scale-80 rounded-xl bg-black/60 p-6 text-white backdrop-blur-sm lg:scale-100"
+>
+	<div class="relative flex flex-col items-center gap-2">
+		<svg width="400" height="400" class="-rotate-90">
+			<circle cx="200" cy="200" r={radius} fill="none" stroke="#374151" stroke-width="24" />
+			<circle
+				cx="200"
+				cy="200"
+				r={radius}
+				fill="none"
+				stroke="#22c55e"
+				stroke-width="24"
+				stroke-linecap="round"
+				stroke-dasharray={circumference}
+				stroke-dashoffset={strokeDashoffset}
+				class="transition-all duration-1000 ease-linear"
+			/>
+		</svg>
+		<div class="absolute inset-0 flex flex-col items-center justify-center">
+			<p class="font-mono text-5xl font-bold">{formatTime(intervalCountdown)}</p>
+			<p class="text-2xl text-slate-400">/ {formatTime(interval * 60)}</p>
 		</div>
 	</div>
 </div>
@@ -48,31 +66,14 @@
 	<div class="flex flex-wrap items-center gap-8 text-left">
 		<div>
 			<div class="leading-12">
-				<p class="text-lg text-slate-400">Total</p>
-				<p class="font-mono text-3xl font-semibold text-white">{formatTime(elapsedTime)}</p>
+				<p class="text-xl text-slate-400">Total</p>
+				<p class="font-mono text-5xl font-semibold text-white">{formatTime(elapsedTime)}</p>
 			</div>
 
 			<div class="leading-12">
-				<p class="text-lg text-slate-400">Intervals</p>
-				<p class="font-mono text-3xl font-semibold text-white">{intervalsCompleted}</p>
+				<p class="text-xl text-slate-400">Intervals</p>
+				<p class="font-mono text-5xl font-semibold text-white">{intervalsCompleted}</p>
 			</div>
-		</div>
-		<div class="flex flex-col items-center gap-2">
-			<svg width="200" height="200" class="-rotate-90">
-				<circle cx="100" cy="100" r={radius} fill="none" stroke="#374151" stroke-width="24" />
-				<circle
-					cx="100"
-					cy="100"
-					r={radius}
-					fill="none"
-					stroke="#22c55e"
-					stroke-width="24"
-					stroke-linecap="round"
-					stroke-dasharray={circumference}
-					stroke-dashoffset={strokeDashoffset}
-					class="transition-all duration-1000 ease-linear"
-				/>
-			</svg>
 		</div>
 	</div>
 </div>
