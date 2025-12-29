@@ -49,7 +49,7 @@
 	let strokeDashoffset = $derived(circumference * (1 - progress()));
 </script>
 
-<div class="flex w-full justify-between gap-4 p-3">
+<div class="flex w-full justify-between gap-1 p-0 lg:gap-4 lg:p-3">
 	<div class="scale-80 rounded-xl bg-black/60 p-6 text-white backdrop-blur-sm lg:scale-100">
 		<div class="relative flex flex-col items-center gap-2">
 			<svg width="400" height="400" class="-rotate-90">
@@ -77,7 +77,7 @@
 
 	<div class="flex flex-col gap-4">
 		<div
-			class="flex flex-col items-end gap-4 rounded-xl bg-black/60 p-6 text-right text-white backdrop-blur-sm"
+			class="flex w-48 flex-col items-end gap-4 rounded-xl bg-black/60 p-6 text-right text-white backdrop-blur-sm"
 		>
 			<div class="leading-12 md:leading-24">
 				{#if isListening}
