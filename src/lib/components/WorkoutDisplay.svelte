@@ -49,8 +49,8 @@
 	let strokeDashoffset = $derived(circumference * (1 - progress()));
 </script>
 
-<div class="flex w-full justify-between gap-1 p-0 lg:gap-4 lg:p-3">
-	<div class="scale-80 rounded-xl bg-black/60 p-6 text-white backdrop-blur-sm lg:scale-100">
+<div class="flex w-full justify-between gap-1 lg:gap-4 lg:p-3">
+	<div class="scale-80 rounded-xl bg-black/30 text-white backdrop-blur-sm lg:scale-100">
 		<div class="relative flex flex-col items-center gap-2">
 			<svg width="400" height="400" class="-rotate-90">
 				<circle cx="200" cy="200" r={radius} fill="none" stroke="#374151" stroke-width="24" />
@@ -77,7 +77,7 @@
 
 	<div class="flex flex-col gap-4">
 		<div
-			class="flex w-48 flex-col items-end gap-4 rounded-xl bg-black/60 p-6 text-right text-white backdrop-blur-sm"
+			class="flex w-48 flex-col items-end gap-4 rounded-xl bg-black/30 p-6 text-right text-white backdrop-blur-sm"
 		>
 			<div class="leading-12 md:leading-24">
 				{#if isListening}
@@ -92,7 +92,7 @@
 				<p class="text-2xl text-slate-300">SPM</p>
 			</div>
 		</div>
-		<div class="flex flex-col gap-2 rounded-xl bg-black/60 p-6 text-white backdrop-blur-sm">
+		<div class="flex flex-col gap-1 rounded-xl bg-black/30 p-2 text-white backdrop-blur-sm">
 			{#each sceneryList as scenery}
 				<div
 					class="rounded-lg px-3 py-2 text-xs transition-all {scenery.id === sceneryId
@@ -107,7 +107,7 @@
 </div>
 
 <div class="absolute bottom-4 left-4 flex flex-col gap-4">
-	<div class="rounded-xl bg-black/60 p-6 text-white backdrop-blur-sm">
+	<div class="rounded-xl bg-black/30 p-6 text-white backdrop-blur-sm">
 		<div class="flex flex-wrap items-center gap-8 text-left">
 			<div>
 				<div class="leading-12">

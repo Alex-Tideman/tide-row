@@ -1,16 +1,17 @@
 <script lang="ts">
 	interface Props {
 		pace: number;
+		isPaused?: boolean;
 	}
 
-	let { pace }: Props = $props();
+	let { pace, isPaused = false }: Props = $props();
 
 	// Animation duration based on pace (strokes per minute)
 	// e.g., 24 SPM = 60/24 = 2.5 seconds per stroke
 	let strokeDuration = $derived(60 / pace);
 </script>
 
-<div class="first-person-view" style="--stroke-duration: {strokeDuration}s">
+<div class="first-person-view {isPaused ? 'paused' : ''}" style="--stroke-duration: {strokeDuration}s">
 	<!-- Boat bow (front of boat, viewed from rower's seat) -->
 	<svg viewBox="0 0 400 280" class="boat-view" preserveAspectRatio="xMidYMax meet">
 		<!-- Boat hull - perspective view looking forward, elongated -->
@@ -120,50 +121,88 @@
 
 	.oar-hand-left {
 		animation: oar-row-left var(--stroke-duration, 2.5s) ease-in-out infinite;
-		transform-origin: 175px 99px;
+		transform-origin: 70px 99px;
 	}
 
 	.oar-hand-right {
 		animation: oar-row-right var(--stroke-duration, 2.5s) ease-in-out infinite;
-		transform-origin: 325px 99px;
+		transform-origin: 430px 99px;
 	}
 
 	@keyframes boat-bob {
 		0%, 100% {
-			transform: translateY(0) rotate(-0.3deg);
+			transform: translateY(0) rotate(-0.2deg);
 		}
-		25% {
-			transform: translateY(-2px) rotate(0deg);
+		35% {
+			transform: translateY(-3px) rotate(0.1deg);
 		}
 		50% {
-			transform: translateY(0) rotate(0.3deg);
+			transform: translateY(-1px) rotate(0.2deg);
 		}
-		75% {
-			transform: translateY(2px) rotate(0deg);
+		85% {
+			transform: translateY(2px) rotate(-0.1deg);
 		}
 	}
 
+	/* Rowing motion - oar pivots at oarlock:
+	   - When hands pull BACK (toward body), oar blade swings FORWARD
+	   - When hands push FORWARD (away from body), oar blade swings BACK
+
+	   0% = Catch: hands forward, oar blades back (in water)
+	   40% = Drive complete: hands pulled back, oar blades swung forward
+	   50% = Finish: hands at body, blades lifted
+	   90% = Recovery: hands pushing forward, blades swinging back
+	   100% = Back to catch
+	*/
 	@keyframes oar-row-left {
 		0% {
-			transform: rotate(-10deg) translateX(30px);
+			/* Catch - hands extended forward, blade back in water */
+			transform: translateY(-35px) rotate(-25deg);
+		}
+		40% {
+			/* Drive - hands pulled back, blade swings forward */
+			transform: translateY(30px) rotate(20deg);
 		}
 		50% {
-			transform: rotate(10deg) translateX(-30px);
+			/* Finish - hands at body, blade forward and lifted */
+			transform: translateY(35px) rotate(25deg);
+		}
+		90% {
+			/* Recovery - hands extending forward, blade swinging back */
+			transform: translateY(-20px) rotate(-15deg);
 		}
 		100% {
-			transform: rotate(-10deg) translateX(30px);
+			/* Back to catch */
+			transform: translateY(-35px) rotate(-25deg);
 		}
 	}
 
 	@keyframes oar-row-right {
 		0% {
-			transform: rotate(10deg) translateX(-30px);
+			/* Catch - hands extended forward, blade back in water */
+			transform: translateY(-35px) rotate(25deg);
+		}
+		40% {
+			/* Drive - hands pulled back, blade swings forward */
+			transform: translateY(30px) rotate(-20deg);
 		}
 		50% {
-			transform: rotate(-10deg) translateX(30px);
+			/* Finish - hands at body, blade forward and lifted */
+			transform: translateY(35px) rotate(-25deg);
+		}
+		90% {
+			/* Recovery - hands extending forward, blade swinging back */
+			transform: translateY(-20px) rotate(15deg);
 		}
 		100% {
-			transform: rotate(10deg) translateX(-30px);
+			/* Back to catch */
+			transform: translateY(-35px) rotate(25deg);
 		}
+	}
+
+	.first-person-view.paused .boat-view,
+	.first-person-view.paused .oar-hand-left,
+	.first-person-view.paused .oar-hand-right {
+		animation-play-state: paused;
 	}
 </style>

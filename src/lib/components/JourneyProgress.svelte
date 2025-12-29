@@ -18,7 +18,7 @@
 
 {#if journey}
 	<div
-		class="hidden max-h-fit w-full flex-col gap-3 rounded-xl bg-black/60 p-4 text-white backdrop-blur-sm lg:flex"
+		class="hidden max-h-fit w-full flex-col gap-3 rounded-xl bg-black/30 p-4 text-white backdrop-blur-sm lg:flex"
 	>
 		<div class="flex items-center justify-between">
 			<div>

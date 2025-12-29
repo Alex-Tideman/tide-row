@@ -16,6 +16,7 @@ export interface WorkoutState {
 
 interface PersistedState {
 	isActive: boolean;
+	isPaused: boolean;
 	elapsedTime: number;
 	interval: number;
 	intervalCountdown: number;
@@ -95,6 +96,7 @@ function createWorkoutStore() {
 	const savedJourney = loadJourneyProgress();
 
 	let isActive = $state(false);
+	let isPaused = $state(false);
 	let elapsedTime = $state(0);
 	let interval = $state(5);
 	let intervalCountdown = $state(0);
@@ -109,6 +111,7 @@ function createWorkoutStore() {
 	function persist() {
 		saveState({
 			isActive,
+			isPaused,
 			elapsedTime,
 			interval,
 			intervalCountdown,
@@ -157,21 +160,33 @@ function createWorkoutStore() {
 	function restore() {
 		const saved = loadState();
 		if (saved && saved.isActive) {
-			const now = Date.now();
-			const secondsPassed = Math.floor((now - saved.lastTick) / 1000);
-
 			isActive = true;
 			interval = saved.interval;
 			pace = saved.pace;
 			scenery = saved.scenery || defaultScenery;
-			elapsedTime = saved.elapsedTime + secondsPassed;
+			journeyId = saved.journeyId || defaultJourney.id;
 			intervalsCompleted = saved.intervalsCompleted || 0;
+
+			// If paused, restore exact state without advancing time
+			if (saved.isPaused) {
+				isPaused = true;
+				elapsedTime = saved.elapsedTime;
+				intervalCountdown = saved.intervalCountdown;
+				sessionDistance = saved.sessionDistance || 0;
+				journeyProgress = saved.journeyProgress || 0;
+				return;
+			}
+
+			// Not paused - calculate time passed while away
+			const now = Date.now();
+			const secondsPassed = Math.floor((now - saved.lastTick) / 1000);
+
+			elapsedTime = saved.elapsedTime + secondsPassed;
 
 			// Calculate distance traveled while away
 			const metersWhileAway = (calculateMetersPerMinute(saved.pace) / 60) * secondsPassed;
 			sessionDistance = (saved.sessionDistance || 0) + metersWhileAway;
 			journeyProgress = (saved.journeyProgress || 0) + metersWhileAway;
-			journeyId = saved.journeyId || defaultJourney.id;
 
 			// Calculate new countdown and any completed intervals while away
 			let newCountdown = saved.intervalCountdown - secondsPassed;
@@ -208,11 +223,30 @@ function createWorkoutStore() {
 
 	function end() {
 		isActive = false;
+		isPaused = false;
 		if (timerInterval) {
 			clearInterval(timerInterval);
 			timerInterval = null;
 		}
 		clearState();
+	}
+
+	function pause() {
+		if (!isPaused && isActive) {
+			isPaused = true;
+			if (timerInterval) {
+				clearInterval(timerInterval);
+				timerInterval = null;
+			}
+			persist();
+		}
+	}
+
+	function resume() {
+		if (isPaused && isActive) {
+			isPaused = false;
+			startTimer();
+		}
 	}
 
 	function updatePace(newPace: number) {
@@ -239,6 +273,9 @@ function createWorkoutStore() {
 	return {
 		get isActive() {
 			return isActive;
+		},
+		get isPaused() {
+			return isPaused;
 		},
 		get elapsedTime() {
 			return elapsedTime;
@@ -269,6 +306,8 @@ function createWorkoutStore() {
 		},
 		start,
 		end,
+		pause,
+		resume,
 		restore,
 		updatePace,
 		updateInterval,
