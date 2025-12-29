@@ -1,4 +1,5 @@
 import { defaultScenery } from '$lib/scenery';
+import { defaultJourney, calculateMetersPerMinute } from '$lib/journeys';
 
 export interface WorkoutState {
 	isActive: boolean;
@@ -8,6 +9,9 @@ export interface WorkoutState {
 	intervalsCompleted: number;
 	pace: number;
 	scenery: string;
+	sessionDistance: number;
+	journeyId: string;
+	journeyProgress: number;
 }
 
 interface PersistedState {
@@ -18,10 +22,20 @@ interface PersistedState {
 	intervalsCompleted: number;
 	pace: number;
 	scenery: string;
+	sessionDistance: number;
+	journeyId: string;
+	journeyProgress: number;
 	lastTick: number;
 }
 
+interface JourneyPersistence {
+	journeyId: string;
+	progress: number;
+	totalDistance: number;
+}
+
 const STORAGE_KEY = 'row-tide-workout';
+const JOURNEY_STORAGE_KEY = 'row-tide-journey';
 
 function loadState(): PersistedState | null {
 	if (typeof localStorage === 'undefined') return null;
@@ -54,7 +68,32 @@ function clearState() {
 	}
 }
 
+function loadJourneyProgress(): JourneyPersistence | null {
+	if (typeof localStorage === 'undefined') return null;
+	try {
+		const saved = localStorage.getItem(JOURNEY_STORAGE_KEY);
+		if (saved) {
+			return JSON.parse(saved);
+		}
+	} catch {
+		// Ignore parse errors
+	}
+	return null;
+}
+
+function saveJourneyProgress(data: JourneyPersistence) {
+	if (typeof localStorage === 'undefined') return;
+	try {
+		localStorage.setItem(JOURNEY_STORAGE_KEY, JSON.stringify(data));
+	} catch {
+		// Ignore storage errors
+	}
+}
+
 function createWorkoutStore() {
+	// Load saved journey progress
+	const savedJourney = loadJourneyProgress();
+
 	let isActive = $state(false);
 	let elapsedTime = $state(0);
 	let interval = $state(5);
@@ -62,6 +101,9 @@ function createWorkoutStore() {
 	let intervalsCompleted = $state(0);
 	let pace = $state(24);
 	let scenery = $state(defaultScenery);
+	let sessionDistance = $state(0);
+	let journeyId = $state(savedJourney?.journeyId || defaultJourney.id);
+	let journeyProgress = $state(savedJourney?.progress || 0);
 	let timerInterval: ReturnType<typeof setInterval> | null = null;
 
 	function persist() {
@@ -73,7 +115,18 @@ function createWorkoutStore() {
 			intervalsCompleted,
 			pace,
 			scenery,
+			sessionDistance,
+			journeyId,
+			journeyProgress,
 			lastTick: Date.now()
+		});
+	}
+
+	function persistJourney() {
+		saveJourneyProgress({
+			journeyId,
+			progress: journeyProgress,
+			totalDistance: 0
 		});
 	}
 
@@ -86,12 +139,18 @@ function createWorkoutStore() {
 			elapsedTime += 1;
 			intervalCountdown -= 1;
 
+			// Calculate distance traveled this second
+			const metersPerSecond = calculateMetersPerMinute(pace) / 60;
+			sessionDistance += metersPerSecond;
+			journeyProgress += metersPerSecond;
+
 			if (intervalCountdown <= 0) {
 				intervalsCompleted += 1;
 				intervalCountdown = interval * 60;
 			}
 
 			persist();
+			persistJourney();
 		}, 1000);
 	}
 
@@ -108,6 +167,12 @@ function createWorkoutStore() {
 			elapsedTime = saved.elapsedTime + secondsPassed;
 			intervalsCompleted = saved.intervalsCompleted || 0;
 
+			// Calculate distance traveled while away
+			const metersWhileAway = (calculateMetersPerMinute(saved.pace) / 60) * secondsPassed;
+			sessionDistance = (saved.sessionDistance || 0) + metersWhileAway;
+			journeyProgress = (saved.journeyProgress || 0) + metersWhileAway;
+			journeyId = saved.journeyId || defaultJourney.id;
+
 			// Calculate new countdown and any completed intervals while away
 			let newCountdown = saved.intervalCountdown - secondsPassed;
 			const intervalSeconds = saved.interval * 60;
@@ -121,15 +186,23 @@ function createWorkoutStore() {
 		}
 	}
 
-	function start(initialInterval: number, initialPace: number) {
+	function start(initialInterval: number, initialPace: number, selectedJourneyId?: string) {
 		interval = initialInterval;
 		pace = initialPace;
 		elapsedTime = 0;
 		intervalCountdown = initialInterval * 60;
 		intervalsCompleted = 0;
+		sessionDistance = 0;
 		isActive = true;
 
+		// If a new journey is selected, reset progress
+		if (selectedJourneyId && selectedJourneyId !== journeyId) {
+			journeyId = selectedJourneyId;
+			journeyProgress = 0;
+		}
+
 		persist();
+		persistJourney();
 		startTimer();
 	}
 
@@ -184,6 +257,15 @@ function createWorkoutStore() {
 		},
 		get scenery() {
 			return scenery;
+		},
+		get sessionDistance() {
+			return sessionDistance;
+		},
+		get journeyId() {
+			return journeyId;
+		},
+		get journeyProgress() {
+			return journeyProgress;
 		},
 		start,
 		end,

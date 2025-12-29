@@ -26,8 +26,8 @@
 		}
 	});
 
-	function handleStart(interval: number, pace: number) {
-		workout.start(interval, pace);
+	function handleStart(interval: number, pace: number, journeyId: string) {
+		workout.start(interval, pace, journeyId);
 		startVoiceListening();
 	}
 
@@ -48,15 +48,22 @@
 			pace={workout.pace}
 			sceneryId={workout.scenery}
 			isListening={voiceState.isListening}
+			sessionDistance={workout.sessionDistance}
+			journeyId={workout.journeyId}
+			journeyProgress={workout.journeyProgress}
 		/>
 
 		<button
 			onclick={handleEnd}
-			class="absolute right-4 bottom-4 rounded-sm bg-red-600/80 px-4 py-3 text-xl text-white backdrop-blur-sm transition-colors hover:bg-red-500"
+			class="absolute right-4 bottom-4 z-50 rounded-sm bg-red-600/80 px-4 py-3 text-xl text-white backdrop-blur-sm transition-colors hover:bg-red-500"
 		>
 			End Workout
 		</button>
 	</div>
 {:else}
-	<Setup onStart={handleStart} />
+	<Setup
+		onStart={handleStart}
+		currentJourneyId={workout.journeyId}
+		currentProgress={workout.journeyProgress}
+	/>
 {/if}
