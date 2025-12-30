@@ -276,6 +276,16 @@
 			<path class="wave wave-3" d="M0 70 Q150 55 300 70 T600 70 T900 70 T1200 70 L1200 100 L0 100 Z" />
 		</svg>
 
+		<!-- Forward motion waves - create illusion of moving through water -->
+		<div class="forward-waves">
+			<div class="forward-wave fw-1"></div>
+			<div class="forward-wave fw-2"></div>
+			<div class="forward-wave fw-3"></div>
+			<div class="forward-wave fw-4"></div>
+			<div class="forward-wave fw-5"></div>
+			<div class="forward-wave fw-6"></div>
+		</div>
+
 		<!-- Oar ripples -->
 		<div class="ripple-container ripple-left">
 			<div class="ripple ripple-1"></div>
@@ -485,6 +495,59 @@
 	}
 
 	.water.paused .ripple {
+		animation-play-state: paused;
+	}
+
+	/* Forward motion waves */
+	.forward-waves {
+		position: absolute;
+		inset: 0;
+		overflow: hidden;
+		perspective: 500px;
+	}
+
+	.forward-wave {
+		position: absolute;
+		left: 10%;
+		right: 10%;
+		height: 2px;
+		background: linear-gradient(90deg, transparent 0%, var(--wave-color) 20%, var(--wave-color) 80%, transparent 100%);
+		opacity: 0;
+		border-radius: 50%;
+		animation: wave-forward 3s linear infinite;
+	}
+
+	.fw-1 { animation-delay: 0s; }
+	.fw-2 { animation-delay: 0.5s; }
+	.fw-3 { animation-delay: 1s; }
+	.fw-4 { animation-delay: 1.5s; }
+	.fw-5 { animation-delay: 2s; }
+	.fw-6 { animation-delay: 2.5s; }
+
+	@keyframes wave-forward {
+		0% {
+			top: 5%;
+			left: 35%;
+			right: 35%;
+			height: 1px;
+			opacity: 0;
+		}
+		10% {
+			opacity: 0.4;
+		}
+		50% {
+			opacity: 0.3;
+		}
+		100% {
+			top: 95%;
+			left: -10%;
+			right: -10%;
+			height: 4px;
+			opacity: 0;
+		}
+	}
+
+	.water.paused .forward-wave {
 		animation-play-state: paused;
 	}
 </style>

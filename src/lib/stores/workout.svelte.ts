@@ -250,9 +250,8 @@ function createWorkoutStore() {
 	}
 
 	function updatePace(newPace: number) {
-		if (newPace > 0 && newPace <= 60) {
+		if (newPace > 0 && newPace <= 120) {
 			pace = newPace;
-			intervalCountdown = interval * 60;
 			persist();
 		}
 	}
