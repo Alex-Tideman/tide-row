@@ -13,6 +13,8 @@
 		sessionDistance: number;
 		journeyId: string;
 		journeyProgress: number;
+		isWarmup?: boolean;
+		warmupCountdown?: number;
 	}
 
 	let {
@@ -25,8 +27,12 @@
 		isListening = false,
 		sessionDistance,
 		journeyId,
-		journeyProgress
+		journeyProgress,
+		isWarmup = false,
+		warmupCountdown = 0
 	}: Props = $props();
+
+	const WARMUP_DURATION = 120;
 
 	const sceneryList = Object.values(sceneries);
 
@@ -41,12 +47,17 @@
 	const circumference = 2 * Math.PI * radius;
 
 	let progress = $derived(() => {
+		if (isWarmup) {
+			const elapsedInWarmup = WARMUP_DURATION - warmupCountdown;
+			return elapsedInWarmup / WARMUP_DURATION;
+		}
 		const totalSeconds = interval * 60;
 		const elapsedInInterval = totalSeconds - intervalCountdown;
 		return elapsedInInterval / totalSeconds;
 	});
 
 	let strokeDashoffset = $derived(circumference * (1 - progress()));
+	let circleColor = $derived(isWarmup ? '#f59e0b' : '#22c55e'); // amber for warmup, green for workout
 </script>
 
 <div class="flex w-full justify-between gap-1 lg:gap-4 lg:p-3">
@@ -59,7 +70,7 @@
 					cy="200"
 					r={radius}
 					fill="none"
-					stroke="#22c55e"
+					stroke={circleColor}
 					stroke-width="24"
 					stroke-linecap="round"
 					stroke-dasharray={circumference}
@@ -68,8 +79,14 @@
 				/>
 			</svg>
 			<div class="absolute inset-0 flex flex-col items-center justify-center">
-				<p class="font-mono text-5xl font-bold">{formatTime(intervalCountdown)}</p>
-				<p class="text-2xl text-slate-400">/ {formatTime(interval * 60)}</p>
+				{#if isWarmup}
+					<p class="text-2xl font-bold text-amber-400">WARMUP</p>
+					<p class="font-mono text-5xl font-bold">{formatTime(warmupCountdown)}</p>
+					<p class="text-lg text-slate-400">Get ready!</p>
+				{:else}
+					<p class="font-mono text-5xl font-bold">{formatTime(intervalCountdown)}</p>
+					<p class="text-2xl text-slate-400">/ {formatTime(interval * 60)}</p>
+				{/if}
 			</div>
 		</div>
 	</div>

@@ -3,6 +3,8 @@ import { defaultJourney, calculateMetersPerMinute } from '$lib/journeys';
 
 export interface WorkoutState {
 	isActive: boolean;
+	isWarmup: boolean;
+	warmupCountdown: number;
 	elapsedTime: number;
 	interval: number;
 	intervalCountdown: number;
@@ -17,6 +19,8 @@ export interface WorkoutState {
 interface PersistedState {
 	isActive: boolean;
 	isPaused: boolean;
+	isWarmup: boolean;
+	warmupCountdown: number;
 	elapsedTime: number;
 	interval: number;
 	intervalCountdown: number;
@@ -28,6 +32,8 @@ interface PersistedState {
 	journeyProgress: number;
 	lastTick: number;
 }
+
+const WARMUP_DURATION = 120; // 2 minutes in seconds
 
 interface JourneyPersistence {
 	journeyId: string;
@@ -97,6 +103,8 @@ function createWorkoutStore() {
 
 	let isActive = $state(false);
 	let isPaused = $state(false);
+	let isWarmup = $state(false);
+	let warmupCountdown = $state(0);
 	let elapsedTime = $state(0);
 	let interval = $state(5);
 	let intervalCountdown = $state(0);
@@ -112,6 +120,8 @@ function createWorkoutStore() {
 		saveState({
 			isActive,
 			isPaused,
+			isWarmup,
+			warmupCountdown,
 			elapsedTime,
 			interval,
 			intervalCountdown,
@@ -139,21 +149,34 @@ function createWorkoutStore() {
 		}
 
 		timerInterval = setInterval(() => {
-			elapsedTime += 1;
-			intervalCountdown -= 1;
+			if (isWarmup) {
+				// During warmup, just count down
+				warmupCountdown -= 1;
+				if (warmupCountdown <= 0) {
+					// Warmup complete, start main workout
+					isWarmup = false;
+					warmupCountdown = 0;
+					intervalCountdown = interval * 60;
+				}
+				persist();
+			} else {
+				// Main workout
+				elapsedTime += 1;
+				intervalCountdown -= 1;
 
-			// Calculate distance traveled this second
-			const metersPerSecond = calculateMetersPerMinute(pace) / 60;
-			sessionDistance += metersPerSecond;
-			journeyProgress += metersPerSecond;
+				// Calculate distance traveled this second
+				const metersPerSecond = calculateMetersPerMinute(pace) / 60;
+				sessionDistance += metersPerSecond;
+				journeyProgress += metersPerSecond;
 
-			if (intervalCountdown <= 0) {
-				intervalsCompleted += 1;
-				intervalCountdown = interval * 60;
+				if (intervalCountdown <= 0) {
+					intervalsCompleted += 1;
+					intervalCountdown = interval * 60;
+				}
+
+				persist();
+				persistJourney();
 			}
-
-			persist();
-			persistJourney();
 		}, 1000);
 	}
 
@@ -170,6 +193,8 @@ function createWorkoutStore() {
 			// If paused, restore exact state without advancing time
 			if (saved.isPaused) {
 				isPaused = true;
+				isWarmup = saved.isWarmup || false;
+				warmupCountdown = saved.warmupCountdown || 0;
 				elapsedTime = saved.elapsedTime;
 				intervalCountdown = saved.intervalCountdown;
 				sessionDistance = saved.sessionDistance || 0;
@@ -179,17 +204,39 @@ function createWorkoutStore() {
 
 			// Not paused - calculate time passed while away
 			const now = Date.now();
-			const secondsPassed = Math.floor((now - saved.lastTick) / 1000);
+			let secondsPassed = Math.floor((now - saved.lastTick) / 1000);
 
-			elapsedTime = saved.elapsedTime + secondsPassed;
+			// Handle warmup time while away
+			if (saved.isWarmup) {
+				const warmupRemaining = saved.warmupCountdown - secondsPassed;
+				if (warmupRemaining > 0) {
+					// Still in warmup
+					isWarmup = true;
+					warmupCountdown = warmupRemaining;
+					elapsedTime = 0;
+					intervalCountdown = 0;
+					sessionDistance = saved.sessionDistance || 0;
+					journeyProgress = saved.journeyProgress || 0;
+					startTimer();
+					return;
+				} else {
+					// Warmup finished while away, calculate main workout time
+					isWarmup = false;
+					warmupCountdown = 0;
+					secondsPassed = -warmupRemaining; // Time spent in main workout
+				}
+			}
 
-			// Calculate distance traveled while away
+			elapsedTime = (saved.isWarmup ? 0 : saved.elapsedTime) + secondsPassed;
+
+			// Calculate distance traveled while away (only during main workout)
 			const metersWhileAway = (calculateMetersPerMinute(saved.pace) / 60) * secondsPassed;
 			sessionDistance = (saved.sessionDistance || 0) + metersWhileAway;
 			journeyProgress = (saved.journeyProgress || 0) + metersWhileAway;
 
 			// Calculate new countdown and any completed intervals while away
-			let newCountdown = saved.intervalCountdown - secondsPassed;
+			const startingCountdown = saved.isWarmup ? saved.interval * 60 : saved.intervalCountdown;
+			let newCountdown = startingCountdown - secondsPassed;
 			const intervalSeconds = saved.interval * 60;
 			while (newCountdown <= 0) {
 				intervalsCompleted += 1;
@@ -205,10 +252,13 @@ function createWorkoutStore() {
 		interval = initialInterval;
 		pace = initialPace;
 		elapsedTime = 0;
-		intervalCountdown = initialInterval * 60;
+		intervalCountdown = 0; // Will be set after warmup
 		intervalsCompleted = 0;
 		sessionDistance = 0;
 		isActive = true;
+		isPaused = true; // Start paused, waiting for voice command "Start"
+		isWarmup = true;
+		warmupCountdown = WARMUP_DURATION;
 
 		// If a new journey is selected, reset progress
 		if (selectedJourneyId && selectedJourneyId !== journeyId) {
@@ -218,7 +268,7 @@ function createWorkoutStore() {
 
 		persist();
 		persistJourney();
-		startTimer();
+		// Don't start timer - wait for voice command or button press
 	}
 
 	function end() {
@@ -275,6 +325,12 @@ function createWorkoutStore() {
 		},
 		get isPaused() {
 			return isPaused;
+		},
+		get isWarmup() {
+			return isWarmup;
+		},
+		get warmupCountdown() {
+			return warmupCountdown;
 		},
 		get elapsedTime() {
 			return elapsedTime;

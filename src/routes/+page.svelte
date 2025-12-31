@@ -60,6 +60,8 @@
 			sessionDistance={workout.sessionDistance}
 			journeyId={workout.journeyId}
 			journeyProgress={workout.journeyProgress}
+			isWarmup={workout.isWarmup}
+			warmupCountdown={workout.warmupCountdown}
 		/>
 
 		<div class="absolute right-4 bottom-4 z-50 flex gap-2">
@@ -70,11 +72,23 @@
 					: 'bg-yellow-600/80 hover:bg-yellow-500'}"
 			>
 				{#if workout.isPaused}
-					<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+					<svg
+						xmlns="http://www.w3.org/2000/svg"
+						width="24"
+						height="24"
+						viewBox="0 0 24 24"
+						fill="currentColor"
+					>
 						<path d="M8 5v14l11-7z" />
 					</svg>
 				{:else}
-					<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+					<svg
+						xmlns="http://www.w3.org/2000/svg"
+						width="24"
+						height="24"
+						viewBox="0 0 24 24"
+						fill="currentColor"
+					>
 						<path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" />
 					</svg>
 				{/if}
@@ -97,8 +111,8 @@
 						font-size="22"
 						font-weight="bold"
 						fill="white"
-						font-family="Arial, sans-serif"
-					>STOP</text>
+						font-family="Arial, sans-serif">STOP</text
+					>
 				</svg>
 			</button>
 		</div>

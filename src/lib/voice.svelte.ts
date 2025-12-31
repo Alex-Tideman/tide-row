@@ -15,6 +15,21 @@ let lastCommand = $state('');
 function parseCommand(transcript: string): { type: string; value?: number; scenery?: string } | null {
 	const text = transcript.toLowerCase().trim();
 
+	// Start command (to begin workout from paused state)
+	if (text.includes('start') || text.includes('begin') || text.includes('go')) {
+		return { type: 'start' };
+	}
+
+	// Pause command
+	if (text.includes('pause') || text.includes('wait') || text.includes('hold')) {
+		return { type: 'pause' };
+	}
+
+	// Resume command
+	if (text.includes('resume') || text.includes('continue')) {
+		return { type: 'resume' };
+	}
+
 	// End commands
 	if (text.includes('end') || text.includes('stop') || text.includes('finish')) {
 		return { type: 'end' };
@@ -70,6 +85,15 @@ export function startListening(callbacks: VoiceCallbacks) {
 				callbacks.onCommand?.(transcript);
 
 				switch (command.type) {
+					case 'start':
+						workout.resume();
+						break;
+					case 'pause':
+						workout.pause();
+						break;
+					case 'resume':
+						workout.resume();
+						break;
 					case 'end':
 						stopListening();
 						callbacks.onEnd();
